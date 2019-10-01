@@ -16,7 +16,7 @@ var port = process.env.PORT || 3000;
 mongoose.connect(process.env.MONGO_URI,async (err)=>{
   if(err){
     console.log(err)
-  }else if(await UrlSeq.countDocuments()==0){
+  }else if(await UrlSeq.count()==0){
       console.log("Init Db")
       UrlSeq.create({inc:0});
     }
@@ -52,18 +52,22 @@ app.post("/api/shorturl/new", async (req,res)=>{
     return;
   }
   
-  var query = {long:long},
-    update = { long:long },
+  var query = {long:long, short:{$gt:0}},
+    update = { },
     options = { upsert: true, new: true, setDefaultsOnInsert: true, useFindAndModify:false };
 
   const model = await Url.findOneAndUpdate(query,update,options);
-  console.log(model);
-  return
-  if(model.short == 0)
+  console.log(model)
+  if(model.short === -1)
   {  
+    console.log("creating model")
     const seq = await UrlSeq.findOne();
     model.short = ++seq.inc;
+    console.log(model)
     await Promise.all([seq.save(),model.save()])
+  }
+  else{
+    console.log("model already in db")
   }
 
   res.send({orginal_url:model.long, short_url:model.short})
