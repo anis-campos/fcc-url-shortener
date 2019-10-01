@@ -6,7 +6,7 @@ const express = require('express'),
       cors = require('cors'),
       bodyparser = require('body-parser'),
       app = express(),
-      {UrlModel} =  require('./UrlModel');
+      {UrlModel} =  require('./models');
 
 // Basic Configuration 
 var port = process.env.PORT || 3000;
@@ -33,7 +33,8 @@ app.get("/api/shorturl/:id", function (req, res) {
 });
 
 app.post("/api/shorturl/new",(req,res)=>{
-  req.body.original_url
+  const long = req.body.original_url;
+  
 })
 
 
