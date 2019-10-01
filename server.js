@@ -33,7 +33,38 @@ app.get('/', function(req, res){
   res.sendFile(process.cwd() + '/views/index.html');
 });
 
-function lookupAsync(url) {
+
+  
+// your first API endpoint... 
+app.get("/api/shorturl/:id", async  (req, res) => {
+
+  const val = await isUrlValidAsync("www.google.com")
+  res.json({greeting: 'hello API', url:val});
+});
+
+app.post("/api/shorturl/new", async (req,res)=>{
+  const long = req.body.original_url, 
+        isValid = await isUrlValidAsync(long);
+ 
+  if(!isValid)
+  {
+    res.send({error:"invalid Url"})
+    return;
+  }
+  const seq = await UrlSeq.findOne();
+  seq.inc++;
+  await seq.save();
+  await Url.create({short:seq, long:long});
+  res.send({orginal_url:long, short_url:seq})
+})
+
+
+app.listen(port, function () {
+  console.log('Node.js listening ...');
+});
+
+
+function isUrlValidAsync(url) {
   return new Promise((resolve,reject)=>{
     try{
       dns.lookup(url,(err,address,familly)=>{
@@ -42,6 +73,7 @@ function lookupAsync(url) {
         resolve(false)
       }
       else{
+        console.log(`Url can be resolve : [${url}] => [${address}]`)
         resolve(true)
       }
     })
@@ -52,25 +84,3 @@ function lookupAsync(url) {
     }
   })
 } 
-  
-// your first API endpoint... 
-app.get("/api/shorturl/:id", async  (req, res) => {
-
-  const val = await lookupAsync("www.google.com")
-  res.json({greeting: 'hello API', url:val});
-});
-
-app.post("/api/shorturl/new", async (req,res)=>{
-  const long = req.body.original_url;
-
-  await dns.lookup(long)
-  const seq = await UrlSeq.findOne();
-  console.log(seq);
-  
-  
-})
-
-
-app.listen(port, function () {
-  console.log('Node.js listening ...');
-});
