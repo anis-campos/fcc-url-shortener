@@ -6,6 +6,7 @@ const express = require('express'),
       cors = require('cors'),
       bodyparser = require('body-parser'),
       app = express(),
+      dns = require('dns'),
       {Url,UrlSeq} =  require('./models');
 
 // Basic Configuration 
@@ -32,17 +33,40 @@ app.get('/', function(req, res){
   res.sendFile(process.cwd() + '/views/index.html');
 });
 
+function lookupAsync(url) {
+  return new Promise((resolve,reject)=>{
+    try{
+      dns.lookup(url,(err,address,familly)=>{
+      if(err){
+        console.log(err)
+        resolve(false)
+      }
+      else{
+        resolve(true)
+      }
+    })
+    }
+    catch(ex){
+      console.log(ex)
+      resolve(false)
+    }
+  })
+} 
   
 // your first API endpoint... 
-app.get("/api/shorturl/:id", function (req, res) {
-  
-  res.json({greeting: 'hello API'});
+app.get("/api/shorturl/:id", async  (req, res) => {
+
+  const val = await lookupAsync("www.google.com")
+  res.json({greeting: 'hello API', url:val});
 });
 
 app.post("/api/shorturl/new", async (req,res)=>{
+  const long = req.body.original_url;
+
+  await dns.lookup(long)
   const seq = await UrlSeq.findOne();
   console.log(seq);
-  const long = req.body.original_url;
+  
   
 })
 
