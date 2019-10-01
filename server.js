@@ -4,7 +4,7 @@ const express = require('express'),
       mongo = require('mongodb'),
       mongoose = require('mongoose'),
       cors = require('cors'),
-      bodyparser = require('body-parser'),
+      bodyParser = require('body-parser'),
       app = express(),
       dns = require('dns'),
       {Url,UrlSeq} =  require('./models');
@@ -16,7 +16,7 @@ var port = process.env.PORT || 3000;
 mongoose.connect(process.env.MONGO_URI,async (err)=>{
   if(err){
     console.log(err)
-  }else if(await UrlSeq.count()==0){
+  }else if(await UrlSeq.countDocuments()==0){
       console.log("Init Db")
       UrlSeq.create({inc:0});
     }
@@ -25,7 +25,7 @@ mongoose.connect(process.env.MONGO_URI,async (err)=>{
 app.use(cors());
 
 /** this project needs to parse POST bodies **/
-app.use(bodyparser.json())
+app.use(bodyParser.urlencoded({ extended: true })); 
 
 app.use('/public', express.static(process.cwd() + '/public'));
 
@@ -43,11 +43,9 @@ app.get("/api/shorturl/:id", async  (req, res) => {
 });
 
 app.post("/api/shorturl/new", async (req,res)=>{
-  const long = req.body.original_url, 
+  const long = req.body.url, 
         isValid = await isUrlValidAsync(long);
  
-  console.log(body)
-  
   if(!isValid)
   {
     res.send({error:"invalid Url"})
@@ -55,10 +53,12 @@ app.post("/api/shorturl/new", async (req,res)=>{
   }
   
   var query = {long:long},
-    update = { long:long, short:0 },
-    options = { upsert: true, new: true, setDefaultsOnInsert: true };
+    update = { long:long },
+    options = { upsert: true, new: true, setDefaultsOnInsert: true, useFindAndModify:false };
 
   const model = await Url.findOneAndUpdate(query,update,options);
+  console.log(model);
+  return
   if(model.short == 0)
   {  
     const seq = await UrlSeq.findOne();
@@ -78,6 +78,12 @@ app.listen(port, function () {
 function isUrlValidAsync(url) {
   return new Promise((resolve,reject)=>{
     try{
+      if(!url){
+        console.log("Url is Empty !")
+        resolve(false);
+        return;
+      }
+      url = url.trim().replace(/https?:\/\//,"");
       dns.lookup(url,(err,address,familly)=>{
       if(err){
         console.log(err)
