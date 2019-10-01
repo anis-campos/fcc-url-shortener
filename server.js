@@ -12,12 +12,14 @@ const express = require('express'),
 var port = process.env.PORT || 3000;
 
 /** this project needs a db !! **/ 
-mongoose.connect(process.env.MONGO_URI);
-(()=>{
-  if(UrlSeq.count()==0){
-    UrlSeq.create({inc:0});
-  }
-})()
+mongoose.connect(process.env.MONGO_URI,async (err)=>{
+  if(err){
+    console.log(err)
+  }else if(await UrlSeq.count()==0){
+      console.log("Init Db")
+      UrlSeq.create({inc:0});
+    }
+});
 
 app.use(cors());
 
@@ -37,10 +39,9 @@ app.get("/api/shorturl/:id", function (req, res) {
   res.json({greeting: 'hello API'});
 });
 
-app.post("/api/shorturl/new",(req,res)=>{
-   if(UrlSeq.count()==0){
-    UrlSeq.create({inc:1});
-  }
+app.post("/api/shorturl/new", async (req,res)=>{
+  const seq = await UrlSeq.findOne();
+  console.log(seq);
   const long = req.body.original_url;
   
 })
