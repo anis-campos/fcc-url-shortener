@@ -14,4 +14,5 @@ const urlSequenceSchema = new Schema({
 const urlSequenceModel =  mongoose.model('UrlSeq',urlSequenceSchema);
 
 
-module.exports.UrlModel = UrlModel
+module.exports.Url = UrlModel
+module.exports.UrlSeq = urlSequenceModel

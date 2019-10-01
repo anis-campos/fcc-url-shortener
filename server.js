@@ -6,13 +6,18 @@ const express = require('express'),
       cors = require('cors'),
       bodyparser = require('body-parser'),
       app = express(),
-      {UrlModel} =  require('./models');
+      {Url,UrlSeq} =  require('./models');
 
 // Basic Configuration 
 var port = process.env.PORT || 3000;
 
 /** this project needs a db !! **/ 
 mongoose.connect(process.env.MONGO_URI);
+(()=>{
+  if(UrlSeq.count()==0){
+    UrlSeq.create({inc:0});
+  }
+})()
 
 app.use(cors());
 
@@ -33,6 +38,9 @@ app.get("/api/shorturl/:id", function (req, res) {
 });
 
 app.post("/api/shorturl/new",(req,res)=>{
+   if(UrlSeq.count()==0){
+    UrlSeq.create({inc:1});
+  }
   const long = req.body.original_url;
   
 })
