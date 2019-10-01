@@ -3,7 +3,7 @@ const mongoose = require('mongoose'),
 
 const urlSchema = new Schema({
   short: Number,
-  long: String
+  long: {type:String, unique:true}
 });
 const UrlModel = mongoose.model('Url',urlSchema);
 

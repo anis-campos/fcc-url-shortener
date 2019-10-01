@@ -46,16 +46,27 @@ app.post("/api/shorturl/new", async (req,res)=>{
   const long = req.body.original_url, 
         isValid = await isUrlValidAsync(long);
  
+  console.log(body)
+  
   if(!isValid)
   {
     res.send({error:"invalid Url"})
     return;
   }
-  const seq = await UrlSeq.findOne();
-  seq.inc++;
-  await seq.save();
-  await Url.create({short:seq, long:long});
-  res.send({orginal_url:long, short_url:seq})
+  
+  var query = {long:long},
+    update = { long:long, short:0 },
+    options = { upsert: true, new: true, setDefaultsOnInsert: true };
+
+  const model = await Url.findOneAndUpdate(query,update,options);
+  if(model.short == 0)
+  {  
+    const seq = await UrlSeq.findOne();
+    model.short = ++seq.inc;
+    await Promise.all([seq.save(),model.save()])
+  }
+
+  res.send({orginal_url:model.long, short_url:model.short})
 })
 
 
